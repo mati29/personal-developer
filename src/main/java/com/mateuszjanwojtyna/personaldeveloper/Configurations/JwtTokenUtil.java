@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -49,10 +48,6 @@ public class JwtTokenUtil implements Serializable {
     public String generateToken(User user) {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getRole())));
-        if(user.getRoles() != null) {
-            System.out.println(user.getUsername() + user.getRoles().toString() + "role");
-            user.getRoles().forEach(System.out::println);
-        }
         return doGenerateToken(user.getUsername(),authorities);
     }
 
@@ -60,12 +55,8 @@ public class JwtTokenUtil implements Serializable {
         Claims claims = Jwts.claims().setSubject(subject);
         claims.put("scopes", authorities);
 
-        //if(authorities != null && authorities.get(0) != null && authorities.get(0).getAuthority() != null)
-        System.out.println(authorities);//.get(0).getAuthority());
-
         return Jwts.builder()
                 .setClaims(claims)
-                //.setPayload(authorities.get(0).getAuthority())
                 .setIssuer("http://devglan.com")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_VALIDITY_SECONDS*1000))
