@@ -86,6 +86,24 @@
 
 		<dependency>
 			<groupId>com.documents4j</groupId>
+			<artifactId>documents4j-server-standalone</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.documents4j</groupId>
+			<artifactId>documents4j-client</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.documents4j</groupId>
+			<artifactId>documents4j-server</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.documents4j</groupId>
 			<artifactId>documents4j-transformer-msoffice-word</artifactId>
 			<version>1.0.2</version>
 		</dependency>
