@@ -29,19 +29,26 @@ public class FilesServiceImpl implements FilesService {
         return "pdf".equals(FilenameUtils.getExtension(file.getName()));
     }
 
-    private static boolean addFiles(File file, List poemsTitle) {
-        return poemsTitle.add(FilenameUtils.getBaseName(file.getName()));
+    private class ListFileMerger {
+        private final List temp;
+        public ListFileMerger(List temp) {
+            this.temp = temp;
+        }
+        public void apply(File file) {
+            temp.add(FilenameUtils.getBaseName(file.getName()));
+        }
     }
 
     @Override
     public List getFilesName() {
         List poemsTitle = new ArrayList<String>();
         File poemDirectory = new File("poems");
+        ListFileMerger listFileMerger = new ListFileMerger(poemsTitle);
         Arrays
                 .asList(poemDirectory.listFiles())
                 .stream()
                 .filter(FilesServiceImpl::filterPdf)
-                .forEach(file -> poemsTitle.add(FilenameUtils.getBaseName(file.getName())));
+                .forEach(listFileMerger::apply);
 
         return poemsTitle;
     }
