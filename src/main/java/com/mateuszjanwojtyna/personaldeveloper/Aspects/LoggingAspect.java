@@ -33,10 +33,13 @@ public class LoggingAspect {
     @Pointcut("execution(* com.mateuszjanwojtyna.personaldeveloper.Services.impl.AuditServiceImpl.*(..))")
     public void auditServicesImpl(){};
 
+    @Pointcut("execution(* com.mateuszjanwojtyna.personaldeveloper.Controllers.AuditController.*(..))")
+    public void auditController(){};
+
     @Pointcut("controllers() || services() || repositories()")
     public void bussinessPointcut(){};
 
-    @Pointcut("auditRepo() || auditServices() || auditServicesImpl()")
+    @Pointcut("auditRepo() || auditServices() || auditServicesImpl() || auditController()")
     public void auditPointcut(){};
 
     @Pointcut("bussinessPointcut() && !auditPointcut()")

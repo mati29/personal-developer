@@ -1,5 +1,6 @@
 package com.mateuszjanwojtyna.personaldeveloper.Services.impl;
 
+import com.mateuszjanwojtyna.personaldeveloper.DTO.AuditPageRange;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.Audit;
 import com.mateuszjanwojtyna.personaldeveloper.Enums.BussinessHook;
 import com.mateuszjanwojtyna.personaldeveloper.Models.UserPrincipal;
@@ -8,6 +9,9 @@ import com.mateuszjanwojtyna.personaldeveloper.Services.AuditService;
 import org.aspectj.lang.JoinPoint;
 import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,16 @@ public class AuditServiceImpl implements AuditService  {
 
     @Autowired
     AuditRepository auditRepository;
+
+    @Override
+    public List<Audit> getAuditPage(AuditPageRange auditPageRange) {
+        return auditRepository.findAll(
+                PageRequest.of(
+                        auditPageRange.getPage(), auditPageRange.getLimit(), Sort.Direction.ASC, auditPageRange.getColumn()
+                )
+        )
+                .getContent();
+    }
 
     @Override
     public Audit create(JoinPoint joinPoint) {
