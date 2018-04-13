@@ -5,10 +5,7 @@ import com.mateuszjanwojtyna.personaldeveloper.Entities.Audit;
 import com.mateuszjanwojtyna.personaldeveloper.Services.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +20,12 @@ public class AuditController {
     @PostMapping
     public List<Audit> getAuditByPage(@RequestBody AuditPageRange auditPageRange){
         return auditService.getAuditPage(auditPageRange);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/count")
+    public int getAuditListSize(){
+        return auditService.getAuditListSize();
     }
 
 }

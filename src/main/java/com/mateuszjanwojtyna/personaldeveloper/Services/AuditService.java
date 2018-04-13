@@ -9,4 +9,5 @@ import java.util.List;
 public interface AuditService {
     Audit create(JoinPoint joinPoint);
     List<Audit> getAuditPage(AuditPageRange auditPageRange);
+    int getAuditListSize();
 }

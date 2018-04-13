@@ -9,4 +9,5 @@ import org.springframework.data.repository.Repository;
 public interface AuditRepository extends Repository<Audit, Integer>{
     Audit save(Audit audit);
     Page<Audit> findAll(Pageable pageable);
+    int count();
 }

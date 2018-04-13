@@ -28,6 +28,11 @@ public class AuditServiceImpl implements AuditService  {
     AuditRepository auditRepository;
 
     @Override
+    public int getAuditListSize() {
+        return auditRepository.count();
+    }
+
+    @Override
     public List<Audit> getAuditPage(AuditPageRange auditPageRange) {
         return auditRepository.findAll(
                 PageRequest.of(
