@@ -5,6 +5,7 @@ public class AuditPageRange {
     int limit;
     int page;
     String column;
+    boolean reverse;
 
     public int getLimit() {
         return limit;
@@ -28,5 +29,13 @@ public class AuditPageRange {
 
     public void setColumn(String column) {
         this.column = column;
+    }
+
+    public boolean isReverse() {
+        return reverse;
+    }
+
+    public void setReverse(boolean reverse) {
+        this.reverse = reverse;
     }
 }

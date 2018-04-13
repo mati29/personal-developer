@@ -31,7 +31,7 @@ public class AuditServiceImpl implements AuditService  {
     public List<Audit> getAuditPage(AuditPageRange auditPageRange) {
         return auditRepository.findAll(
                 PageRequest.of(
-                        auditPageRange.getPage(), auditPageRange.getLimit(), Sort.Direction.ASC, auditPageRange.getColumn()
+                        auditPageRange.getPage(), auditPageRange.getLimit(), auditPageRange.isReverse() ? Sort.Direction.ASC : Sort.Direction.DESC, auditPageRange.getColumn()
                 )
         )
                 .getContent();
