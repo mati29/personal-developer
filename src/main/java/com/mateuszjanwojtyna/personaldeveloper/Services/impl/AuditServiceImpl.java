@@ -9,7 +9,6 @@ import com.mateuszjanwojtyna.personaldeveloper.Services.AuditService;
 import org.aspectj.lang.JoinPoint;
 import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
