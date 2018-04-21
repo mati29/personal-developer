@@ -1,19 +1,31 @@
 package com.mateuszjanwojtyna.personaldeveloper.DTO;
 
+import com.mateuszjanwojtyna.personaldeveloper.Annotations.UniqueUsername;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.User;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class UserData {
 
     private int id;
 
+    @UniqueUsername
+    @Size(min = 3, max = 255)
     private String username;
 
+    @Size(min = 3, max = 255)//but after encryption it will be probably too much signs || check it always be sixty
     private String password;
 
+    @Size(min = 3, max = 255)
     private String firstName;
 
+    @Size(min = 3, max = 255)
     private String lastName;
 
+    @Size(min = 3, max = 255)
     private String email;
 
     public UserData() {}

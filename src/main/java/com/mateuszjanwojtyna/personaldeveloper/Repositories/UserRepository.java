@@ -16,4 +16,6 @@ public interface UserRepository extends Repository<User, Integer> {
     User save(User user);
 
     User findByUsername(String username);
+
+    boolean existsByUsername(String username);
 }

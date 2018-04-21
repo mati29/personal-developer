@@ -59,14 +59,12 @@ public class AuditServiceImpl implements AuditService  {
     }
 
     private BussinessHook getBussinessHookType(String clas){
-        BussinessHook bussinessHook;
-        if(clas.contains("Controller"))
-            return bussinessHook = BussinessHook.Controller;
-        if(clas.contains("Repository"))
-            return bussinessHook = BussinessHook.Repository;
-        if(clas.contains("Service"))
-            return bussinessHook = BussinessHook.Service;
-        return null;
+        return Arrays
+                .asList(BussinessHook.values())
+                .stream()
+                .filter(h -> clas.contains(h.toString()))
+                .findFirst()
+                .orElse(null);
     }
 
     private String getLoggedUsername() {//optional then

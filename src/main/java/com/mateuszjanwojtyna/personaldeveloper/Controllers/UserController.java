@@ -7,10 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping({"/users"})
 public class UserController {
@@ -19,9 +20,8 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/new")
-    public UserData create(@RequestBody UserData userData){
-        userService.create(new User(userData));
-        return userData;
+    public UserData create(@Valid @RequestBody UserData userData){
+        return new UserData(userService.create(new User(userData)));
     }
 
     @GetMapping(path = {"/user/{id}"})
