@@ -1,6 +1,6 @@
 package com.mateuszjanwojtyna.personaldeveloper.Controllers;
 
-import com.mateuszjanwojtyna.personaldeveloper.Repositories.UserRepository;
+import com.mateuszjanwojtyna.personaldeveloper.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -17,12 +17,12 @@ public class WebSocketController {
     private SimpMessageSendingOperations messagingTemplate;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @MessageMapping("/check")
     @SendTo("/usernameUnique/reply")
     public boolean processMessageFromClient(@RequestBody String message) throws Exception {
-        return !userRepository.existsByUsername(message);
+        return userService.usernameUnique(message);
     }
 
     @MessageExceptionHandler

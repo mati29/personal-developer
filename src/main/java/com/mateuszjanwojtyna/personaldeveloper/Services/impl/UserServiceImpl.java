@@ -78,4 +78,9 @@ public class UserServiceImpl implements UserDetailsService,UserService {
     public User findOne(String username) {
         return repository.findByUsername(username);
     }
+
+    @Override
+    public boolean usernameUnique(String username) {
+        return !repository.existsByUsername(username);
+    }
 }

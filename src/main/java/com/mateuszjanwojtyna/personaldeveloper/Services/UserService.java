@@ -11,4 +11,5 @@ public interface UserService {
     User findById(int id);
     User update(User user);
     User findOne(String username);
+    boolean usernameUnique(String username);
 }
