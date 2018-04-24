@@ -3,9 +3,7 @@ package com.mateuszjanwojtyna.personaldeveloper.DTO;
 import com.mateuszjanwojtyna.personaldeveloper.Annotations.UniqueUsername;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.User;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 public class UserData {
@@ -25,6 +23,7 @@ public class UserData {
     @Size(min = 3, max = 255)
     private String lastName;
 
+    @Email
     @Size(min = 3, max = 255)
     private String email;
 
