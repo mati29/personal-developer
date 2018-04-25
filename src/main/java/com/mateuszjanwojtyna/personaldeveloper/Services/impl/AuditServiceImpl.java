@@ -8,9 +8,9 @@ import com.mateuszjanwojtyna.personaldeveloper.Repositories.AuditRepository;
 import com.mateuszjanwojtyna.personaldeveloper.Services.AuditService;
 import org.aspectj.lang.JoinPoint;
 import org.springframework.aop.framework.Advised;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +18,20 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.springframework.data.domain.Sort.Direction;
 
 @Service(value = "auditService")
 public class AuditServiceImpl implements AuditService  {
 
-    @Autowired
-    AuditRepository auditRepository;
+    private AuditRepository auditRepository;
+
+    public AuditServiceImpl(AuditRepository auditRepository) {
+        this.auditRepository = auditRepository;
+    }
 
     @Override
     public int getAuditListSize() {
@@ -33,82 +40,74 @@ public class AuditServiceImpl implements AuditService  {
 
     @Override
     public List<Audit> getAuditPage(AuditPageRange auditPageRange) {
-        return auditRepository.findAll(
-                PageRequest.of(
-                        auditPageRange.getPage(), auditPageRange.getLimit(), auditPageRange.isReverse() ? Sort.Direction.ASC : Sort.Direction.DESC, auditPageRange.getColumn()
-                )
-        )
-                .getContent();
+        return auditRepository.findAll(getPageRequest(auditPageRange)).getContent();
+    }
+
+    public PageRequest getPageRequest(AuditPageRange auditPageRange) {
+        return PageRequest.of(
+                auditPageRange.getPage(),
+                auditPageRange.getLimit(),
+                getSortDirection(auditPageRange.isReverse()),
+                auditPageRange.getColumn()
+        );
+    }
+
+    public Direction getSortDirection(boolean reverse) {
+        return reverse ? Direction.ASC: Direction.DESC;
     }
 
     @Override
     public Audit create(JoinPoint joinPoint) {
-        String username = getLoggedUsername();
         String clas = getTargetClassName(joinPoint.getThis());
-        BussinessHook bussinessHook = getBussinessHookType(clas);
-        String methodName = joinPoint.getSignature().getName();
-        Timestamp timestamp = new Timestamp(new java.util.Date().getTime());
-        Audit audit = new Audit(
-                        username,
-                        bussinessHook,
-                        clas,
-                        methodName,
-                        timestamp
-        );
-        return auditRepository.save(audit);
+        return auditRepository
+                .save(
+                        new Audit(
+                                getLoggedUsername(),
+                                getBussinessHookType(clas),
+                                clas,
+                                joinPoint.getSignature().getName(),
+                                new Timestamp(new java.util.Date().getTime())
+                        )
+                );
     }
 
-    private BussinessHook getBussinessHookType(String clas){
+    public BussinessHook getBussinessHookType(String clas){
         return Arrays
-                .asList(BussinessHook.values())
-                .stream()
+                .stream(BussinessHook.values())
                 .filter(h -> clas.contains(h.toString()))
                 .findFirst()
                 .orElse(null);
     }
 
-    private String getLoggedUsername() {//optional then
-        StringBuilder username = new StringBuilder();
-        Optional
+    public String getLoggedUsername() {//optional then
+        return Optional
                 .ofNullable(SecurityContextHolder.getContext())
-                .map(context -> context.getAuthentication())
-                .map(authentication -> authentication.getPrincipal())
-                .filter(principal -> principal instanceof UserPrincipal)
-                .map(principal -> (UserPrincipal)principal)
-                .map(userPrincipal -> userPrincipal.getUsername())
-                .ifPresent(u -> username.append(u));
-        return username.toString();
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(UserPrincipal.class::isInstance)
+                .map(UserPrincipal.class::cast)
+                .map(UserPrincipal::getUsername)
+                .orElse("");
     }
 
-    private boolean targetClassIsProxied(final Object target) {
-
+    public boolean targetClassIsProxied(final Object target) {
         return target.getClass().getCanonicalName().contains("$Proxy");
     }
 
-    private String getTargetClassName(final Object target) {
-
-        if (target == null) {
-            return "";
-        }
-
-        if (targetClassIsProxied(target)) {
-
-            Advised advised = (Advised) target;
-
-            try {
-                List interfaces =
-                        Arrays
-                                .asList(advised.getProxiedInterfaces())
-                                .stream()
-                                .filter(inter -> inter.getCanonicalName().contains("com.mateuszjanwojtyna.personaldeveloper"))
-                                .collect(Collectors.toList());
-                return interfaces.get(0).toString();
-            } catch (Exception e) {
-
-                return "";
-            }
-        }
-
-        return target.getClass().getCanonicalName();
+    public String getTargetClassName(final Object target) {
+        return Optional
+                .ofNullable(target)
+                .filter(this::targetClassIsProxied)
+                .map(Advised.class::cast)
+                .map(Advised::getProxiedInterfaces)
+                .map(Arrays::stream)
+                .map(interStream -> interStream.filter(inter -> inter.getCanonicalName().contains("com.mateuszjanwojtyna.personaldeveloper")))
+                .flatMap(Stream::findFirst)
+                .map(Class::getCanonicalName)
+                .orElse(Optional
+                        .ofNullable(target)
+                        .map(tar -> tar.getClass().getCanonicalName())
+                        .orElse("")
+                );
     }
 }

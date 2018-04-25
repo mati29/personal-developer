@@ -9,12 +9,15 @@ import org.springframework.stereotype.Service;
 @Service(value = "roleService")
 public class RoleServiceImpl implements RoleService{
 
-    @Autowired
-    private RoleRepository repository;
+    private RoleRepository roleRepository;
+
+    public RoleServiceImpl(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
 
     @Override
     public Role findByRole(String role) {
-        return repository.findByRole(role);
+        return roleRepository.findByRole(role);
     }
 
 }

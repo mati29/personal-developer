@@ -15,19 +15,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Service(value = "userService")
 public class UserServiceImpl implements UserDetailsService,UserService {
 
-    @Autowired
     private UserRepository repository;
-
-    @Autowired
     private BCryptPasswordEncoder encoder;
-
-    @Autowired
     private RoleService roleService;
+
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder encoder, RoleService roleService) {
+        this.repository = userRepository;
+        this.encoder = encoder;
+        this.roleService = roleService;
+    }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = repository.findByUsername(username);
@@ -41,10 +43,8 @@ public class UserServiceImpl implements UserDetailsService,UserService {
     public User create(User user) {
         user.setPassword(encoder.encode(user.getPassword()));
         user.setRoles(
-                new ArrayList<Role>(
-                        Arrays.asList(
-                                roleService.findByRole("ROLE_USER")
-                        )
+                Collections.singletonList(
+                        roleService.findByRole("ROLE_USER")
                 )
         );
         return repository.save(user);

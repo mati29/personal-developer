@@ -22,31 +22,33 @@ import java.util.List;
 @Service(value = "filesService")
 public class FilesServiceImpl implements FilesService {
 
-    @Autowired
-    ConverterComponent converter;
+    private ConverterComponent converter;
+
+    public FilesServiceImpl(ConverterComponent converter) {
+        this.converter = converter;
+    }
 
     private static boolean filterPdf(File file) {
         return "pdf".equals(FilenameUtils.getExtension(file.getName()));
     }
 
     private class ListFileMerger {
-        private final List temp;
-        public ListFileMerger(List temp) {
+        private final List<String> temp;
+        private ListFileMerger(List<String> temp) {
             this.temp = temp;
         }
-        public void apply(File file) {
+        private void apply(File file) {
             temp.add(FilenameUtils.getBaseName(file.getName()));
         }
     }
 
     @Override
     public List getFilesName() {
-        List poemsTitle = new ArrayList<String>();
+        List<String> poemsTitle = new ArrayList<>();
         File poemDirectory = new File("poems");
         ListFileMerger listFileMerger = new ListFileMerger(poemsTitle);
         Arrays
-                .asList(poemDirectory.listFiles())
-                .stream()
+                .stream(poemDirectory.listFiles())
                 .filter(FilesServiceImpl::filterPdf)
                 .forEach(listFileMerger::apply);
 
