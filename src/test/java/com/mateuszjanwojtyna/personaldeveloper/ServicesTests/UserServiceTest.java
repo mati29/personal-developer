@@ -1,22 +1,18 @@
 package com.mateuszjanwojtyna.personaldeveloper.ServicesTests;
 
-import com.mateuszjanwojtyna.personaldeveloper.Entities.Audit;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.Role;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.User;
 import com.mateuszjanwojtyna.personaldeveloper.Repositories.UserRepository;
 import com.mateuszjanwojtyna.personaldeveloper.Services.RoleService;
-import com.mateuszjanwojtyna.personaldeveloper.Services.impl.AuditServiceImpl;
 import com.mateuszjanwojtyna.personaldeveloper.Services.impl.UserServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)

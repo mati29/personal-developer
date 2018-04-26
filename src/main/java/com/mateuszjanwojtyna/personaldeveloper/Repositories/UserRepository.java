@@ -9,7 +9,7 @@ public interface UserRepository extends Repository<User, Integer> {
 
     void delete(User user);
 
-    List findAll();
+    List<User> findAll();
 
     User findById(int id);
 
