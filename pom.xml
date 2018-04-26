@@ -105,6 +105,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4</artifactId>
+			<version>1.7.4</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.documents4j</groupId>
 			<artifactId>documents4j-api</artifactId>
 			<version>1.0.3</version>

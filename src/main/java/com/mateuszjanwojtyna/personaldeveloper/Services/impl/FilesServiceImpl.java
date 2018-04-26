@@ -2,6 +2,7 @@ package com.mateuszjanwojtyna.personaldeveloper.Services.impl;
 
 import com.mateuszjanwojtyna.personaldeveloper.Components.ConverterComponent;
 import com.mateuszjanwojtyna.personaldeveloper.Services.FilesService;
+import com.mateuszjanwojtyna.personaldeveloper.Utility.FilesHelper;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -78,19 +79,6 @@ public class FilesServiceImpl implements FilesService {
         return !"doc".equals(FilenameUtils.getExtension(file.getOriginalFilename()));
     }
 
-    private File getFolder(String path) { // on java 9 private method more polimophic
-        File directory = new File(path);
-        if (!directory.exists()) {
-            try{
-                directory.mkdir();
-            }
-            catch(SecurityException se){
-                //handle it
-            }
-        }
-        return directory;
-    }
-
     private StringBuilder getBaseFileNamePath(File directory, MultipartFile file) throws IOException{
         return new StringBuilder()
                 .append(directory.getCanonicalPath())
@@ -121,7 +109,7 @@ public class FilesServiceImpl implements FilesService {
     }
 
     private String makeConversionFromDocToPdf(MultipartFile uploadedFile) throws IOException{
-        File poemDirectory = getFolder("poems");
+        File poemDirectory = FilesHelper.getFolder("poems");
         File docAtServer = saveDocAtServer(poemDirectory, uploadedFile);
         File pdfAtServer= createPdfAtServer(poemDirectory, uploadedFile);
         converter.convertFromDocToPdf(docAtServer,pdfAtServer);

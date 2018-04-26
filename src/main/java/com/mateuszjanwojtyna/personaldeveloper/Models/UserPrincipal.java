@@ -6,10 +6,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
 
@@ -21,21 +19,13 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        final Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-
-        List<Role> roles = null;
-
-        if (user != null) {
-            roles = user.getRoles();
-        }
-
-        if (roles != null) {
-            for (Role role : roles) {
-                grantedAuthorities.add(new SimpleGrantedAuthority(role.getRole()));
-            }
-        }
-
-        return grantedAuthorities;
+        return Optional.of(user)
+                .map(User::getRoles)
+                .map(List::stream)
+                .map(r -> r.map(Role::getRole))
+                .map(r -> r.map(SimpleGrantedAuthority::new))
+                .map(r -> r.collect(Collectors.toSet()))
+                .orElse(null);
     }
 
     @Override

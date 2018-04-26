@@ -1,20 +1,16 @@
 package com.mateuszjanwojtyna.personaldeveloper.Services.impl;
 
-import com.mateuszjanwojtyna.personaldeveloper.Entities.Role;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.User;
 import com.mateuszjanwojtyna.personaldeveloper.Models.UserPrincipal;
 import com.mateuszjanwojtyna.personaldeveloper.Repositories.UserRepository;
 import com.mateuszjanwojtyna.personaldeveloper.Services.RoleService;
 import com.mateuszjanwojtyna.personaldeveloper.Services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,13 +37,27 @@ public class UserServiceImpl implements UserDetailsService,UserService {
 
     @Override
     public User create(User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
+        encodePassword(user);
+        setStandardRole(user);
+        return repository.save(user);
+    }
+
+    public User encodePassword(User user) {
+        user.setPassword(
+                encoder.encode(
+                        user.getPassword()
+                )
+        );
+        return user;
+    }
+
+    public User setStandardRole(User user) {
         user.setRoles(
                 Collections.singletonList(
                         roleService.findByRole("ROLE_USER")
                 )
         );
-        return repository.save(user);
+        return user;
     }
 
     @Override
