@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UserRepository extends Repository<User, Integer> {
 
-    void delete(User user);
+    User delete(User user);
 
     List<User> findAll();
 

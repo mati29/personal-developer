@@ -16,8 +16,11 @@ import java.util.List;
 @RequestMapping({"/files"})
 public class FileController {
 
-    @Autowired
     private FilesService filesService;
+
+    public FileController(FilesService filesService) {
+        this.filesService = filesService;
+    }
 
     @GetMapping("/poems")
     public List getPoemsName(){

@@ -93,6 +93,7 @@ public class UserServiceTest {
         User user = mock(User.class);
         int correctId = 0;
         when(userRepositoryMock.findById(correctId)).thenReturn(user);
+        when(userRepositoryMock.delete(user)).thenReturn(user);
         assertEquals(userServiceImpl.delete(correctId), user);
     }
 

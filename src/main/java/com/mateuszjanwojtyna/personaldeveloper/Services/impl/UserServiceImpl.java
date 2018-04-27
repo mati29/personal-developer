@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service(value = "userService")
 public class UserServiceImpl implements UserDetailsService,UserService {
@@ -28,11 +29,10 @@ public class UserServiceImpl implements UserDetailsService,UserService {
     }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = repository.findByUsername(username);
-        if(user == null){
-            throw new UsernameNotFoundException("Invalid username or password.");
-        }
-        return new UserPrincipal(user);
+        return Optional.of(username)
+                .map(repository::findByUsername)
+                .map(UserPrincipal::new)
+                .orElseThrow(() ->new UsernameNotFoundException("Invalid username or password."));
     }
 
     @Override
@@ -62,11 +62,10 @@ public class UserServiceImpl implements UserDetailsService,UserService {
 
     @Override
     public User delete(int id) {
-        User user = findById(id);
-        if(user != null){
-            repository.delete(user);
-        }
-        return user;
+        return Optional.of(id)
+                .map(this::findById)
+                .map(repository::delete)
+                .orElse(null);
     }
 
     @Override

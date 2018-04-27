@@ -13,15 +13,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Controller
 public class WebSocketController {
 
-    @Autowired
     private SimpMessageSendingOperations messagingTemplate;
-
-    @Autowired
     private UserService userService;
+
+    public WebSocketController(SimpMessageSendingOperations messagingTemplate, UserService userService) {
+        this.messagingTemplate = messagingTemplate;
+        this.userService = userService;
+    }
 
     @MessageMapping("/check")
     @SendTo("/usernameUnique/reply")
-    public boolean processMessageFromClient(@RequestBody String message) throws Exception {
+    public boolean processMessageFromClient(@RequestBody String message) {
         return userService.usernameUnique(message);
     }
 

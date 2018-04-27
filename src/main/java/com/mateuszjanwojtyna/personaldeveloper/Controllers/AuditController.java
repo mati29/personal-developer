@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/audit")
 public class AuditController {
 
-    @Autowired
-    AuditService auditService;
+    private AuditService auditService;
+
+    public AuditController(AuditService auditService) {
+        this.auditService = auditService;
+    }
 
     @Secured("ROLE_ADMIN")
     @PostMapping
