@@ -4,21 +4,16 @@ import com.mateuszjanwojtyna.personaldeveloper.Components.ConverterComponent;
 import com.mateuszjanwojtyna.personaldeveloper.Services.FilesService;
 import com.mateuszjanwojtyna.personaldeveloper.Utility.FilesHelper;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service(value = "filesService")
 public class FilesServiceImpl implements FilesService {
@@ -29,61 +24,79 @@ public class FilesServiceImpl implements FilesService {
         this.converter = converter;
     }
 
-    private static boolean filterPdf(File file) {
-        return "pdf".equals(FilenameUtils.getExtension(file.getName()));
-    }
-
-    private class ListFileMerger {
-        private final List<String> temp;
-        private ListFileMerger(List<String> temp) {
-            this.temp = temp;
-        }
-        private void apply(File file) {
-            temp.add(FilenameUtils.getBaseName(file.getName()));
-        }
-    }
-
     @Override
     public List getFilesName() {
-        List<String> poemsTitle = new ArrayList<>();
-        File poemDirectory = new File("poems");
-        ListFileMerger listFileMerger = new ListFileMerger(poemsTitle);
-        Arrays
-                .stream(poemDirectory.listFiles())
-                .filter(FilesServiceImpl::filterPdf)
-                .forEach(listFileMerger::apply);
-
-        return poemsTitle;
+        return Optional.of(new File("poems"))
+                .map(File::listFiles)
+                .map(Arrays::stream)
+                .map(files-> files.filter(FilesServiceImpl::filterPdf))
+                .map(file -> file.collect(Collectors.toList()))
+                .orElse(null);
     }
 
     @Override
-    public byte[] getFileInBytes(String filename) throws IOException {
-        File poemFile = new File("poems"+"\\"+filename+".pdf");
-        RandomAccessFile fileAcess = new RandomAccessFile(poemFile, "rw");
-        byte[] byteFile = new byte[(int)fileAcess.length()];
-        fileAcess.readFully(byteFile);
-        return byteFile;
+    public byte[] getFileInBytes(String filename){
+        return Optional.of(new File("poems"+"\\"+filename+".pdf"))
+                .map(FilesHelper::getAccessFile)
+                .map(FilesHelper::getByteFile)
+                .orElse(null);
     }
 
     @Override
     public HttpHeaders getFileHeaders(String filename) {
+        String fullFilename = filename + ".pdf";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/pdf"));
-        String fullFilename = filename + ".pdf";
         headers.setContentDispositionFormData(fullFilename, fullFilename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
         return headers;
     }
 
-    private boolean isFileType(MultipartFile file) {// on java 9 isFile private method more polimophic or implements some utility interface to doc
-        return !"doc".equals(FilenameUtils.getExtension(file.getOriginalFilename()));
+    public static boolean filterPdf(File file) {
+        return Optional.of(file)
+                .map(File::getName)
+                .map(FilenameUtils::getExtension)
+                .filter(ext -> ext.equals("pdf"))
+                .isPresent();
     }
 
-    private StringBuilder getBaseFileNamePath(File directory, MultipartFile file) throws IOException{
-        return new StringBuilder()
-                .append(directory.getCanonicalPath())
-                .append("\\")
-                .append(FilenameUtils.getBaseName(file.getOriginalFilename()));
+    public boolean isFileType(MultipartFile file) {
+        return Optional.of(file)
+                .map(MultipartFile::getOriginalFilename)
+                .map(FilenameUtils::getExtension)
+                .filter(ext -> ext.equals("doc"))
+                .isPresent();
+    }
+
+    public StringBuilder getBaseFileNamePath(File directory, MultipartFile file) {
+        return Optional.of(createBaseFileNamePath(directory,file))
+                .filter(path -> path.toString().matches("^.+[\\\\]{2}.+$"))
+                .orElse(null);
+    }
+
+    public StringBuilder createBaseFileNamePath(File directory, MultipartFile file) {
+        StringBuilder baseFileNamePath = new StringBuilder();
+        appendDirectoryPath(directory, baseFileNamePath);
+        appendFolderSlash(baseFileNamePath);
+        appendFileName(file, baseFileNamePath);
+        return  baseFileNamePath;
+    }
+
+    public void appendFolderSlash(StringBuilder path) {
+        path.append("//");
+    }
+
+    public void appendFileName(MultipartFile file, StringBuilder path) {
+        Optional.of(file)
+                .map(MultipartFile::getOriginalFilename)
+                .map(FilenameUtils::getBaseName)
+                .ifPresent(path::append);
+    }
+
+    public void appendDirectoryPath(File directory, StringBuilder path) {
+        Optional.of(directory)
+                .map(FilesHelper::getCanonicalPath)
+                .ifPresent(path::append);
     }
 
     private String getDocFilePath(StringBuilder stringBuilder) {
@@ -94,21 +107,23 @@ public class FilesServiceImpl implements FilesService {
         return stringBuilder.append(".pdf").toString();
     }
 
-    private File saveDocAtServer(File directory, MultipartFile file) throws IOException {
-        File fileOnServer = new File(getDocFilePath(getBaseFileNamePath(directory,file)));
-        try (InputStream input = file.getInputStream()) {
-            Files.copy(input, fileOnServer.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        return fileOnServer;
+    private File saveDocAtServer(File directory, MultipartFile file){
+        return Optional.of(getBaseFileNamePath(directory,file))
+                .map(this::getDocFilePath)
+                .map(File::new)
+                .map(docFile -> FilesHelper.saveStreamInDoc(file, docFile))
+                .orElse(null);
     }
 
-    private File createPdfAtServer(File directory, MultipartFile file) throws IOException {
-        File filePDF = new File(getPdfFilePath(getBaseFileNamePath(directory,file)));
-        Files.createFile(filePDF.toPath());
-        return filePDF;
+    private File createPdfAtServer(File directory, MultipartFile file){
+        return Optional.of(getBaseFileNamePath(directory,file))
+                .map(this::getPdfFilePath)
+                .map(File::new)
+                .map(FilesHelper::createFileOnPath)
+                .orElse(null);
     }
 
-    private String makeConversionFromDocToPdf(MultipartFile uploadedFile) throws IOException{
+    private String makeConversionFromDocToPdf(MultipartFile uploadedFile){
         File poemDirectory = FilesHelper.getFolder("poems");
         File docAtServer = saveDocAtServer(poemDirectory, uploadedFile);
         File pdfAtServer= createPdfAtServer(poemDirectory, uploadedFile);
@@ -117,10 +132,11 @@ public class FilesServiceImpl implements FilesService {
     }
 
     @Override
-    public String uploadFile(MultipartFile uploadedFile) throws IOException{
-        if(isFileType(uploadedFile))
-            return null;
-
-        return makeConversionFromDocToPdf(uploadedFile);
+    public String uploadFile(MultipartFile uploadedFile){
+        return Optional.of(uploadedFile)
+                .filter(this::isFileType)
+                .map(this::makeConversionFromDocToPdf)
+                .orElse(null);
     }
+
 }
