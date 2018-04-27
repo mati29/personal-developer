@@ -1,5 +1,6 @@
 package com.mateuszjanwojtyna.personaldeveloper.Configurations;
 
+import com.mateuszjanwojtyna.personaldeveloper.Entities.Role;
 import com.mateuszjanwojtyna.personaldeveloper.Entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -12,7 +13,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.mateuszjanwojtyna.personaldeveloper.Models.Constants.ACCESS_TOKEN_VALIDITY_SECONDS;
 import static com.mateuszjanwojtyna.personaldeveloper.Models.Constants.SIGNING_KEY;
@@ -29,8 +32,10 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public  <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = getAllClaimsFromToken(token);
-        return claimsResolver.apply(claims);
+        return Optional.of(token)
+                .map(this::getAllClaimsFromToken)
+                .map(claimsResolver)
+                .orElse(null);
     }
 
     private Claims getAllClaimsFromToken(String token) {
@@ -40,15 +45,27 @@ public class JwtTokenUtil implements Serializable {
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+    private Boolean isTokenNonExpired(String token) {
+        return Optional.of(token)
+                .map(this::getExpirationDateFromToken)
+                .map(expiration -> expiration.after(new Date()))
+                .orElse(null);
     }
 
     public String generateToken(User user) {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getRole())));
-        return doGenerateToken(user.getUsername(),authorities);
+        return Optional.of(user)
+                .map(this::getAuthorities)
+                .map(authorities -> doGenerateToken(user.getUsername(),authorities))
+                .orElse(null);
+    }
+
+    public List<SimpleGrantedAuthority> getAuthorities(User user) {
+        return user
+                .getRoles()
+                .stream()
+                .map(Role::getRole)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
     }
 
     private String doGenerateToken(String subject, List<SimpleGrantedAuthority> authorities) {
@@ -65,10 +82,11 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (
-                username.equals(userDetails.getUsername())
-                        && !isTokenExpired(token));
+        return Optional.of(token)
+                .filter(this::isTokenNonExpired)
+                .map(this::getUsernameFromToken)
+                .filter(username -> username.equals(userDetails.getUsername()))
+                .isPresent();
     }
 
 }

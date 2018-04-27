@@ -14,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 import static com.mateuszjanwojtyna.personaldeveloper.Models.Constants.HEADER_STRING;
 import static com.mateuszjanwojtyna.personaldeveloper.Models.Constants.TOKEN_PREFIX;
@@ -28,33 +29,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
-        String header = req.getHeader(HEADER_STRING);
-        String username = null;
-        String authToken = null;
-        if (header != null && header.startsWith(TOKEN_PREFIX)) {
-            authToken = header.replace(TOKEN_PREFIX,"");
-            try {
-                username = jwtTokenUtil.getUsernameFromToken(authToken);
-            } catch (IllegalArgumentException e) {
-                logger.error("an error occured during getting username from token", e);
-            } catch (ExpiredJwtException e) {
-                logger.warn("the token is expired and not valid anymore", e);
-            }
-        } else {
-            logger.warn("couldn't find bearer string, will ignore the header");
-        }
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        Optional<String> authToken = Optional.of(HEADER_STRING)
+                .map(req::getHeader)
+                .filter(header -> header.startsWith(TOKEN_PREFIX))
+                .map(header -> header.replace(TOKEN_PREFIX,""));
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            if (jwtTokenUtil.validateToken(authToken, userDetails)) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
-                logger.info("authenticated user " + username + ", setting security context");
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        }
-
+        authToken
+                .map(jwtTokenUtil::getUsernameFromToken)
+                .filter( auth-> SecurityContextHolder.getContext().getAuthentication()== null)
+                .map(userDetailsService::loadUserByUsername)
+                .filter(userDetails -> jwtTokenUtil.validateToken(authToken.get(), userDetails))
+                .map(userDetails -> new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()))
+                .map(authentication -> {
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                    return authentication;
+                })
+                .ifPresent(authentication -> SecurityContextHolder.getContext().setAuthentication(authentication));
         chain.doFilter(req, res);
     }
 }
